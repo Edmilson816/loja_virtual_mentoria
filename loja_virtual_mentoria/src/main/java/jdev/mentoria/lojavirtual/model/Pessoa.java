@@ -31,8 +31,10 @@ public abstract class Pessoa implements Serializable {
 	@Column(nullable = false)
 	private String nome;
 	
+	@Column(nullable = false)
 	private String email;
 	
+	@Column(nullable = false)
 	private String telefone;
 	
 	@OneToMany(mappedBy = "pessoa", orphanRemoval = true, cascade = CascadeType.ALL, fetch = FetchType.LAZY)
