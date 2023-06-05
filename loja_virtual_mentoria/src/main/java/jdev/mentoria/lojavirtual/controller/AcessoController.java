@@ -6,7 +6,9 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -19,6 +21,7 @@ import jdev.mentoria.lojavirtual.model.Acesso;
 import jdev.mentoria.lojavirtual.repository.AcessoRepository;
 import jdev.mentoria.lojavirtual.service.AcessoService;
 
+//@CrossOrigin(origins = "192.168.1.10") //Indica que so requisição deste servidor poderá executar este controller
 @Controller
 @RestController
 public class AcessoController {
@@ -49,6 +52,8 @@ public class AcessoController {
 		return new ResponseEntity("Acesso Removido",HttpStatus.OK);
 	}
 	
+	//@CrossOrigin(origins = "192.168.1.10") //Indica que so requisição deste servidor poderá executar este metodo
+	//@Secured({"ROLE_GERENTE", "ROLE_ADMIN"}) //Indica que so que é admin ou gerente pode executar este metodo
 	@ResponseBody
 	@DeleteMapping(value = "**/deleteAcessoPorId/{id}")
 	public ResponseEntity<?> deleteAcessoPorId(@PathVariable("id") Long id){
