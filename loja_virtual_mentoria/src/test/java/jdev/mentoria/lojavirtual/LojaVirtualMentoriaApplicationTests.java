@@ -1,5 +1,6 @@
 package jdev.mentoria.lojavirtual;
 
+import java.util.Calendar;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
@@ -43,7 +44,7 @@ class LojaVirtualMentoriaApplicationTests extends TestCase {
 		MockMvc mockMvc = builder.build();
 		
 		Acesso acesso = new Acesso();
-		acesso.setDescricao("ROLE_COMPRADOR");
+		acesso.setDescricao("ROLE_COMPRADOR"+ Calendar.getInstance().getTimeInMillis());
 		
 		ObjectMapper objectMapper = new ObjectMapper();
 		
@@ -200,9 +201,11 @@ class LojaVirtualMentoriaApplicationTests extends TestCase {
 	@Test
 	public void testCadastraAcesso() throws ExceptionMentoriaJava {
 		
+		String descacesso = "ROLE_ADMIN"+ Calendar.getInstance().getTimeInMillis();
+		
 		Acesso acesso = new Acesso();
 		
-		acesso.setDescricao("ROLE_ADMIN");
+		acesso.setDescricao(descacesso); //Adicionado o time apenas para conseguir testar por conta da validação de duplicidade de usuario
 
 		assertEquals(true, acesso.getId() == null);
 		
@@ -210,7 +213,7 @@ class LojaVirtualMentoriaApplicationTests extends TestCase {
 		
 		assertEquals(true, acesso.getId() > 0);
 		
-		assertEquals(true, acesso.getDescricao() == "ROLE_ADMIN");
+		assertEquals(descacesso, acesso.getDescricao());
 		
 		/*Carrega os dados salvos para testar*/
 		Acesso acesso2 = acessoRepository.findById(acesso.getId()).get();
