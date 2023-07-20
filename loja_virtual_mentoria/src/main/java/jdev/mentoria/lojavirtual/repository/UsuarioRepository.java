@@ -1,5 +1,7 @@
 package jdev.mentoria.lojavirtual.repository;
 
+import java.util.List;
+
 import javax.transaction.Transactional;
 
 import org.springframework.data.jpa.repository.Modifying;
@@ -14,6 +16,9 @@ public interface UsuarioRepository extends CrudRepository<Usuario, Long> {
 	
 	@Query(value = "select u from Usuario u where u.login = ?1")
 	Usuario findUserByLogin(String login);
+	
+	@Query(value = "select u from Usuario u where u.dataAtualSenha <= CURRENT_DATE - 15")
+	List<Usuario> usuarioSenhaVencida();
     
 	@Query(value = "select u from Usuario u where u.pessoa.id = ?1 or u.login = ?2")
 	Usuario findUserByPessoa(Long id, String email);
@@ -26,8 +31,12 @@ public interface UsuarioRepository extends CrudRepository<Usuario, Long> {
 	@Transactional
 	@Modifying
 	@Query(nativeQuery = true, value = "insert into usuarios_acesso(usuario_id, acesso_id)values(?1, (select id from acesso where descricao = 'ROLE_USER'))")
-	void insereAcessoUserPj(Long id);
-	
+	void insereAcessoUserPj(Long iduser);
+
+	@Transactional
+	@Modifying
+	@Query(nativeQuery = true, value = "insert into usuarios_acesso(usuario_id, acesso_id)values(?1, (select id from acesso where descricao = ?2 limit 1))")
+	void insereAcessoUserPj(Long id, String acesso);
 	
 	
 }

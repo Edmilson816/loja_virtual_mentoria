@@ -21,6 +21,9 @@ public class PessoaUserService {
 	@Autowired
 	private PessoaRepository pessoaRepository;
 	
+	@Autowired
+	private ServiceSendEmail serviceSendEmail;
+	
 	private JdbcTemplate jdbcTemplate;
 	
 	public PessoaJuridica salvarPessoJuridica(PessoaJuridica Juridica) {
@@ -54,11 +57,20 @@ public class PessoaUserService {
 			usuarioPJ.setSenha(senhaCript);
 			usuarioPJ = usuarioRepository.save(usuarioPJ);
 			
-			usuarioRepository.insereAcessoUserPj(usuarioPJ.getId());
+			usuarioRepository.insereAcessoUserPj(usuarioPJ.getId(), "ROLE_USER");
+			usuarioRepository.insereAcessoUserPj(usuarioPJ.getId(), "ROLE_ADMIN"); // Passando parametro de forma dinamica
 			
-			if (constraint != null) {
-				jdbcTemplate.execute("begin; alter table usuarios_acesso drop constraint " + constraint +"; commit;");
-			}			
+			
+			StringBuilder menssagemHtml = new StringBuilder();
+			menssagemHtml.append("Segue abaixo seus dados de acesso <br/> para a loja virtual<br/>");
+			menssagemHtml.append("Login: "+Juridica.getEmail()+"<br/>");
+			menssagemHtml.append("Senha: ").append(senha).append("<br/>");
+			menssagemHtml.append("Obrigado!");
+			try {
+			  serviceSendEmail.enviarEmailHtml("Acesso Gerado para Loja Virtual", menssagemHtml.toString(),Juridica.getEmail());
+			}catch (Exception e) {
+				e.printStackTrace();
+			}
 						
 		}
 		

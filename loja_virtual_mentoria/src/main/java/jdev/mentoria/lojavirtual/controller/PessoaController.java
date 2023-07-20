@@ -35,7 +35,11 @@ public class PessoaController {
 	      throw new ExceptionMentoriaJava("Já existe um cnpj cadastrado com o número: "+pessoaJuridica.getCnpj());	
 	    } 
 		
-		pessoaJuridica = pessoaUserService.salvarPessoJuridica(pessoaJuridica); //Cria primeiramene o service
+	    if (pessoaJuridica.getId() == null && pessoaRepository.existeInsEstadualCadastrado(pessoaJuridica.getInscEstadual()) != null) {
+		      throw new ExceptionMentoriaJava("Já existe uma pessoa cadastrada com o número: "+pessoaJuridica.getInscEstadual());	
+		    } 
+
+	    pessoaJuridica = pessoaUserService.salvarPessoJuridica(pessoaJuridica); //Cria primeiramene o service
 		 
 	    return new ResponseEntity<PessoaJuridica>(pessoaJuridica, HttpStatus.OK);
 	
