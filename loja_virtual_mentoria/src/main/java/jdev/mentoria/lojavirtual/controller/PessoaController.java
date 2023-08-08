@@ -7,7 +7,6 @@ import javax.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -16,14 +15,17 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import jdev.mentoria.lojavirtual.ExceptionMentoriaJava;
+import jdev.mentoria.lojavirtual.enums.TipoPessoa;
 import jdev.mentoria.lojavirtual.model.Endereco;
 import jdev.mentoria.lojavirtual.model.PessoaFisica;
 import jdev.mentoria.lojavirtual.model.PessoaJuridica;
 import jdev.mentoria.lojavirtual.model.dto.CepDTO;
+import jdev.mentoria.lojavirtual.model.dto.ConsultaCnpjDTO;
 import jdev.mentoria.lojavirtual.repository.EnderecoRepository;
 import jdev.mentoria.lojavirtual.repository.PessoaFisicaRepository;
 import jdev.mentoria.lojavirtual.repository.PessoaRepository;
 import jdev.mentoria.lojavirtual.service.PessoaUserService;
+import jdev.mentoria.lojavirtual.service.ServiceContagemAcessoApi;
 import jdev.mentoria.lojavirtual.util.ValidaCNPJ;
 import jdev.mentoria.lojavirtual.util.ValidaCPF;
 
@@ -43,16 +45,15 @@ public class PessoaController {
 	private PessoaFisicaRepository pessoaFisicaRepository;
 	
 	@Autowired
-	private JdbcTemplate jdbcTemplate;
+	private ServiceContagemAcessoApi serviceContagemAcessoApi;
 	
-
 	@ResponseBody
 	@GetMapping(value = "**/consultaPfNome/{nome}")
 	public ResponseEntity<List<PessoaFisica>> consultaPfNome(@PathVariable("nome") String nome){
 		
 		List<PessoaFisica> fisica = pessoaFisicaRepository.pesquisaPorNomePF(nome.trim().toUpperCase());
 		
-		jdbcTemplate.execute("begin; UPDATE public.tabela_acesso_end_point SET qtd_acesso_end_point = qtd_acesso_end_point + 1 where nome_end_point = 'END-POINT-NOME-PESSOA-FISICA'; commit;");
+		serviceContagemAcessoApi.atualizaAcessoEndPointPF();
 		
 		return new ResponseEntity<List<PessoaFisica>>(fisica, HttpStatus.OK); 
 	}
@@ -96,7 +97,20 @@ public class PessoaController {
 		
 		return new ResponseEntity<CepDTO>(cepDTO, HttpStatus.OK);
 		
+	}
+	
+	@ResponseBody
+	@GetMapping(value = "**/consultaCnpjReceitaWs/{cnpj}")
+	public ResponseEntity<ConsultaCnpjDTO> consultaCnpjDTO(@PathVariable("cnpj") String cnpj){
+		
+		/*Esta API é publica e por isso so permite 3 consultas por minuto. Se passar dará erro*/
+		
+		ConsultaCnpjDTO consultaCnpjDTO = pessoaUserService.consultaCnpjReceitaWS(cnpj);
+		
+		return new ResponseEntity<ConsultaCnpjDTO>(consultaCnpjDTO, HttpStatus.OK);
+		
 	}	
+	
 	
 	@ResponseBody
 	@PostMapping(value = "**/salvarPJ") /*Depois de criado o metodo posso ir ate TestePessoUsuario para testar o metodo*/
@@ -109,6 +123,10 @@ public class PessoaController {
 	    if (pessoaJuridica.getId() == null && pessoaRepository.existeCnpjCadastrado(pessoaJuridica.getCnpj()) != null) {
 	      throw new ExceptionMentoriaJava("Já existe um cnpj cadastrado com o número: "+pessoaJuridica.getCnpj());	
 	    } 
+	    
+	    if (pessoaJuridica.getTipoPessoa() == null) {
+	      throw new ExceptionMentoriaJava("Informe o tipo de Juridico ou Fornecedor Juridico da loja");
+	    }
 		
 	    if (pessoaJuridica.getId() == null && pessoaRepository.existeInsEstadualCadastrado(pessoaJuridica.getInscEstadual()) != null) {
 		  throw new ExceptionMentoriaJava("Já existe uma pessoa cadastrada com o número: "+pessoaJuridica.getInscEstadual());	
@@ -177,6 +195,11 @@ public class PessoaController {
 	      throw new ExceptionMentoriaJava("Cnpj: "+ pessoaFisica.getCpf() +" está inválido");	
 	    	
 	    }
+	    
+        if (pessoaFisica.getTipoPessoa() == null) {
+        	
+        	pessoaFisica.setTipoPessoa(TipoPessoa.FISICA.name()); //Pega o valor do enum
+        }	    
 
 	    pessoaFisica = pessoaUserService.salvarPessoaFisica(pessoaFisica); //Cria primeiramene o service
 		 
